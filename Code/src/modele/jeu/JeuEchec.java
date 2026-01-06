@@ -9,10 +9,7 @@ import modele.jeu.Pieces.PiecesEchec.Roi;
 import modele.jeu.Pieces.PiecesEchec.Tour;
 import modele.plateau.Case;
 import modele.plateau.Plateau;
-import vue.Fenetres.FenetrePromotion;
-
 import java.util.List;
-import audio.SoundManager;
 
 import static modele.plateau.Plateau.getCase;
 
@@ -23,197 +20,227 @@ import static modele.plateau.Plateau.getCase;
  * promotion des pions) et l’orchestration des tours.
  * </p>
  */
+/**
+ * Implémentation du jeu d’Échecs (modèle pur, sans IHM/son).
+ * <p>
+ * Cette classe respecte strictement le pattern MVC:
+ * - aucune écriture console ni lecture clavier,
+ * - aucun accès au son ou aux fenêtres Swing,
+ * - publication d’événements via {@link JeuEventListener} pour que la vue/contrôleur réagisse.
+ * La méthode jouerPartie traite un seul coup à la fois (pas de boucle bloquante).
+ * </p>
+ */
 public class JeuEchec extends Jeu{
 
+    private JeuEventListener listener;
+
+    /**
+     * Définit le listener d'événements pour ce jeu d'échecs.
+     * @param listener implémentation de JeuEventListener (vue/contrôleur)
+     */
+    public void setEventListener(JeuEventListener listener) {
+        this.listener = listener;
+    }
+
+    /**
+     * Construit un modèle d’échecs sur le plateau fourni et place les pièces.
+     * @param plateau plateau 8x8 (ou de taille conforme) sur lequel jouer
+     */
     public JeuEchec(Plateau plateau) {
         super(plateau);
         reinitialiserPartie();   // Placer les pièces
     }
 
 
+/**
+     * Traite un seul coup d’échecs (sans boucle). Valide la légalité (y compris échec, roques,
+     * prise en passant et promotion automatique en Reine) puis met à jour l’état.
+     * Notifie le listener pour les coups joués/invalides et la fin de partie.
+     * @param premierCoup coup à jouer (cases départ et arrivée obligatoires)
+     * @return true si le coup a été appliqué, false sinon
+     */
     @Override
     public boolean jouerPartie(Coup premierCoup) {
-        Coup coup = premierCoup;
-        while (!estTermine()) {
-            Case caseDepart = coup.getDepart();
-            Case caseArrivee = coup.getArrivee();
-            Piece piece = caseDepart.getPiece();
-
-
-            if (piece == null) {
-                System.out.println("Erreur : aucune pièce à déplacer.");
-                setChanged();
-                notifyObservers();
-                coup = getCoup();
-                continue;
-            }
-
-            if (!piece.getCouleur().equalsIgnoreCase(joueurCourant.getCouleur().name())) {
-                System.out.println("Ce n'est pas votre tour !");
-                setChanged();
-                notifyObservers();
-                coup = getCoup();
-                continue;
-            }
-
-
-            // Récupérer les cases accessibles via le dCA de la pièce
-            List<Case> deplacementsPossibles = piece.getdCA().getCA(caseDepart);
-
-            if (!deplacementsPossibles.contains(caseArrivee)) {
-                System.out.println("Coup invalide pour " + piece.getClass().getSimpleName());
-                SoundManager.playSound("Sounds/illegal.wav");
-                setChanged();
-                notifyObservers();
-                coup = getCoup();
-                continue;
-            }
-
-            if (piece instanceof Pion) {
-                DecPion deplacement = (DecPion) piece.getdCA();
-                Case priseEnPassant = deplacement.getCaseAPrendreEnPassant();
-                if (priseEnPassant != null) {
-                    priseEnPassant.setPiece(null);
-                    System.out.println("Prise en passant !");
-                    SoundManager.playSound("Sounds/capture.wav");
-                }
-            }
-
-            if (piece instanceof Roi) {
-                int dx = caseArrivee.getPosX() - caseDepart.getPosX();
-                int dy = caseArrivee.getPosY() - caseDepart.getPosY();
-
-                // Roque à droite
-                if (dx == 0 && dy == 2) {
-                    Case caseIntermediaire1 = Plateau.getCase(caseDepart.getPosX(), caseDepart.getPosY() + 1);
-                    Case caseIntermediaire2 = Plateau.getCase(caseDepart.getPosX(), caseDepart.getPosY() + 2);
-
-                    boolean case1Menacee = caseMenacee(caseIntermediaire1, joueurCourant);
-                    boolean case2Menacee = caseMenacee(caseIntermediaire2, joueurCourant);
-
-                    if (!case1Menacee && !case2Menacee) {
-                        Case tourDepart = Plateau.getCase(caseDepart.getPosX(), 7);
-                        Case tourArrivee = Plateau.getCase(caseDepart.getPosX(), 5);
-                        Piece tour = tourDepart.getPiece();
-
-                        if (tour instanceof Tour) {
-                            tourDepart.setPiece(null);
-                            tourArrivee.setPiece(tour);
-                            tour.setCase(tourArrivee);
-                            System.out.println("Petit Roque !");
-                            SoundManager.playSound("Sounds/castle.wav");
-                        }
-                    } else {
-                        System.out.println("Roque interdit : une case traversée est menacée !");
-                        SoundManager.playSound("Sounds/illegal.wav");
-                        setChanged();
-                        notifyObservers();
-                        coup = getCoup();
-                        continue;
-                    }
-                }
-
-
-                // Roque à gauche
-                if (dx == 0 && dy == -2) {
-                    Case caseIntermediaire1 = Plateau.getCase(caseDepart.getPosX(), caseDepart.getPosY() - 1);
-                    Case caseIntermediaire2 = Plateau.getCase(caseDepart.getPosX(), caseDepart.getPosY() - 2);
-
-                    boolean case1Menacee = caseMenacee(caseIntermediaire1, joueurCourant);
-                    boolean case2Menacee = caseMenacee(caseIntermediaire2, joueurCourant);
-
-                    if (!case1Menacee && !case2Menacee) {
-                        Case tourDepart = Plateau.getCase(caseDepart.getPosX(), 0);
-                        Case tourArrivee = Plateau.getCase(caseDepart.getPosX(), 3);
-                        Piece tour = tourDepart.getPiece();
-
-                        if (tour instanceof Tour) {
-                            tourDepart.setPiece(null);
-                            tourArrivee.setPiece(tour);
-                            tour.setCase(tourArrivee);
-                            System.out.println("Grand Roque !");
-                            SoundManager.playSound("Sounds/castle.wav");
-                        }
-                    } else {
-                        System.out.println("Roque interdit : une case traversée est menacée !");
-                        SoundManager.playSound("Sounds/illegal.wav");
-                        setChanged();
-                        notifyObservers();
-                        coup = getCoup();
-                        continue;
-                    }
-                }
-            }
-
-
-            // --- Simulation du coup ---
-            Piece pieceCapturee = caseArrivee.getPiece();   // Peut être null
-            Case caseOrigine = caseDepart;
-            Case caseDestination = caseArrivee;
-            Case ancienneCaseDeLaPiece = piece.getCase();   // Important pour bien la restaurer
-
-            // Déplacement temporaire
-            caseOrigine.setPiece(null);
-            caseDestination.setPiece(piece);
-            piece.setCase(caseDestination);
-
-            // Test échec
-            if (estEnEchec(joueurCourant)) {
-                // --- Annulation complète ---
-                caseOrigine.setPiece(piece);
-                piece.setCase(ancienneCaseDeLaPiece);         // On remet la pièce sur sa case d'origine
-                caseDestination.setPiece(pieceCapturee);      // On remet la pièce capturée (si elle existait)
-
-                System.out.println("Ce coup met votre roi en échec !");
-                SoundManager.playSound("Sounds/illegal.wav");
-
-                setChanged();
-                notifyObservers();
-                coup = getCoup();
-                continue;
-            }
-
-
-            System.out.println("Coup joué: " + piece.getClass().getSimpleName() +
-                    " à la position (" + caseArrivee.getPosX() + ", " +
-                    caseArrivee.getPosY() + ")");
-            SoundManager.playSound("Sounds/move-self.wav");
-
-
-            if (piece instanceof Pion) {
-                if (caseDestination.getPosX() == 0 || caseDestination.getPosX() == 7) {
-                    // Appeler la fenêtre de promotion
-                    FenetrePromotion fenetre = new FenetrePromotion(piece.getCouleur(), caseDestination);
-                    Piece piecePromo = fenetre.getPiecePromo();
-
-                    // Si une pièce a été choisie, on effectue la promotion
-                    if (piecePromo != null) {
-                        caseDestination.setPiece(piecePromo);
-                        piecePromo.setCase(caseDestination);
-                        System.out.println("Promotion en " + piecePromo.getClass().getSimpleName() + " !");
-                        SoundManager.playSound("Sounds/promote.wav");
-                    }
-                }
-            }
-
-
-            if (piece instanceof Roi roi) {
-                roi.setADejaBouge(true);
-            }
-            if (piece instanceof Tour tour) {
-                tour.setADejaBouge(true);
-            }
-
-            joueurCourant = (joueurCourant == JOUEUR_BLANC) ? JOUEUR_NOIR : JOUEUR_BLANC;
+        if (premierCoup == null) return false;
+        Case caseDepart = premierCoup.getDepart();
+        Case caseArrivee = premierCoup.getArrivee();
+        if (caseDepart == null || caseArrivee == null) {
+            if (listener != null) listener.onCoupInvalide("Coup incomplet (départ/arrivée manquants)");
             setChanged();
             notifyObservers();
-
-            // Afficher le plateau mis à jour et indiquer le trait au joueur suivant
-            afficherPlateauEtTrait();
-
-            coup = getCoup(); // enchaîne le prochain coup
+            return false;
         }
-        return false;
+
+        Piece piece = caseDepart.getPiece();
+        if (piece == null) {
+            if (listener != null) listener.onCoupInvalide("Aucune pièce à déplacer");
+            setChanged();
+            notifyObservers();
+            return false;
+        }
+        if (!piece.getCouleur().equalsIgnoreCase(joueurCourant.getCouleur().name())) {
+            if (listener != null) listener.onCoupInvalide("Ce n'est pas votre tour");
+            setChanged();
+            notifyObservers();
+            return false;
+        }
+
+        // Vérifier que la destination est accessible selon la pièce
+        List<Case> deplacementsPossibles = piece.getdCA().getCA(caseDepart);
+        if (!deplacementsPossibles.contains(caseArrivee)) {
+            if (listener != null) listener.onCoupInvalide("Coup invalide pour " + piece.getClass().getSimpleName());
+            setChanged();
+            notifyObservers();
+            return false;
+        }
+
+        // Sauvegardes pour simulation/retour arrière
+        Piece pieceCapturee = caseArrivee.getPiece();
+        Case origine = caseDepart;
+        Case destination = caseArrivee;
+        Piece pieceEnPassantCapturee = null;
+
+        // Gérer cas spéciaux AVANT validation finale (prise en passant, roque)
+        boolean roqueDroite = false;
+        boolean roqueGauche = false;
+        Case tourDepart = null;
+        Case tourArrivee = null;
+
+        if (piece instanceof Roi) {
+            int dx = destination.getPosX() - origine.getPosX();
+            int dy = destination.getPosY() - origine.getPosY();
+            if (dx == 0 && dy == 2) { // petit roque
+                roqueDroite = true;
+                Case c1 = Plateau.getCase(origine.getPosX(), origine.getPosY() + 1);
+                Case c2 = Plateau.getCase(origine.getPosX(), origine.getPosY() + 2);
+                if (caseMenacee(c1, joueurCourant) || caseMenacee(c2, joueurCourant)) {
+                    if (listener != null) listener.onCoupInvalide("Roque interdit: case traversée menacée");
+                    setChanged();
+                    notifyObservers();
+                    return false;
+                }
+                tourDepart = Plateau.getCase(origine.getPosX(), 7);
+                tourArrivee = Plateau.getCase(origine.getPosX(), 5);
+            } else if (dx == 0 && dy == -2) { // grand roque
+                roqueGauche = true;
+                Case c1 = Plateau.getCase(origine.getPosX(), origine.getPosY() - 1);
+                Case c2 = Plateau.getCase(origine.getPosX(), origine.getPosY() - 2);
+                if (caseMenacee(c1, joueurCourant) || caseMenacee(c2, joueurCourant)) {
+                    if (listener != null) listener.onCoupInvalide("Roque interdit: case traversée menacée");
+                    setChanged();
+                    notifyObservers();
+                    return false;
+                }
+                tourDepart = Plateau.getCase(origine.getPosX(), 0);
+                tourArrivee = Plateau.getCase(origine.getPosX(), 3);
+            }
+        }
+
+        // Gestion de la prise en passant pendant simulation
+        Case casePriseEnPassant = null;
+        if (piece instanceof Pion) {
+            DecPion deplacement = (DecPion) piece.getdCA();
+            casePriseEnPassant = deplacement.getCaseAPrendreEnPassant();
+        }
+
+        // Simulation du coup pour vérifier l'échec
+        origine.setPiece(null);
+        if (piece instanceof Pion && casePriseEnPassant != null && destination.getPiece() == null && destination.getPosY() != origine.getPosY()) {
+            // Mouvement diagonal sans pièce: c'est une prise en passant
+            pieceEnPassantCapturee = casePriseEnPassant.getPiece();
+            casePriseEnPassant.setPiece(null);
+        }
+        destination.setPiece(piece);
+        piece.setCase(destination);
+        // Déplacer tour pour roque pendant simulation (optionnel mais plus correct)
+        Piece tourSauvegardee = null;
+        if (roqueDroite || roqueGauche) {
+            tourSauvegardee = (tourDepart != null) ? tourDepart.getPiece() : null;
+            if (tourDepart != null && tourArrivee != null && tourSauvegardee instanceof Tour) {
+                tourDepart.setPiece(null);
+                tourArrivee.setPiece(tourSauvegardee);
+                tourSauvegardee.setCase(tourArrivee);
+            }
+        }
+
+        boolean illegal = estEnEchec(joueurCourant);
+
+        // Restaurer l'état après simulation
+        destination.setPiece(pieceCapturee);
+        origine.setPiece(piece);
+        piece.setCase(origine);
+        if (pieceEnPassantCapturee != null && casePriseEnPassant != null) {
+            casePriseEnPassant.setPiece(pieceEnPassantCapturee);
+        }
+        if (roqueDroite || roqueGauche) {
+            if (tourDepart != null && tourArrivee != null && tourSauvegardee instanceof Tour) {
+                tourArrivee.setPiece(null);
+                tourDepart.setPiece(tourSauvegardee);
+                tourSauvegardee.setCase(tourDepart);
+            }
+        }
+
+        if (illegal) {
+            if (listener != null) listener.onCoupInvalide("Ce coup laisse votre roi en échec");
+            setChanged();
+            notifyObservers();
+            return false;
+        }
+
+        // Appliquer le coup réellement
+        origine.setPiece(null);
+        if (piece instanceof Pion && casePriseEnPassant != null && destination.getPiece() == null && destination.getPosY() != origine.getPosY()) {
+            // prise en passant effective
+            casePriseEnPassant.setPiece(null);
+        }
+        destination.setPiece(piece);
+        piece.setCase(destination);
+
+        // Roque effectif: déplacer la tour
+        if (roqueDroite || roqueGauche) {
+            Piece tour = (tourDepart != null) ? tourDepart.getPiece() : null;
+            if (tour instanceof Tour && tourArrivee != null) {
+                tourDepart.setPiece(null);
+                tourArrivee.setPiece(tour);
+                tour.setCase(tourArrivee);
+            }
+        }
+
+        // Promotion automatique en Reine
+        if (piece instanceof Pion) {
+            if (destination.getPosX() == 0 || destination.getPosX() == 7) {
+                // Remplacer le pion par une Reine
+                destination.setPiece(null);
+                new Reine(piece.getCouleur(), plateau, destination);
+            }
+        }
+
+        // Marquer les pièces qui ont bougé
+        if (piece instanceof Roi roi) {
+            roi.setADejaBouge(true);
+        }
+        if (piece instanceof Tour tour) {
+            tour.setADejaBouge(true);
+        }
+
+        if (listener != null) listener.onCoupJoue(joueurCourant, destination);
+
+        // Vérifier fin de partie
+        boolean fin = estTermine();
+        if (fin) {
+            if (gagnant != null) {
+                if (listener != null) listener.onPartieTerminee(gagnant);
+            } else {
+                if (listener != null) listener.onMatchNul();
+            }
+        } else {
+            // Alterner le joueur
+            joueurCourant = (joueurCourant == JOUEUR_BLANC) ? JOUEUR_NOIR : JOUEUR_BLANC;
+        }
+
+        setChanged();
+        notifyObservers();
+        return true;
     }
 
 
@@ -243,19 +270,10 @@ public class JeuEchec extends Jeu{
 
         // Aucun coup légal trouvé
         if (enEchec) {
-            gagnant = (joueur == JOUEUR_BLANC) ? JOUEUR_NOIR : JOUEUR_BLANC;
-            // Afficher la position finale avant d'annoncer
-            afficherPlateauEtTrait();
-            System.out.println("Échec et mat !");
-            SoundManager.playSound("Sounds/game-end.wav");
+            gagnant = (joueur == JOUEUR_BLANC) ? JOUEUR_NOIR : JOUEUR_BLANC; // échec et mat
         } else {
-            gagnant = null; // Pat = match nul
-            // Afficher la position finale avant d'annoncer
-            afficherPlateauEtTrait();
-            System.out.println("Pat !");
-            SoundManager.playSound("Sounds/game-end.wav");
+            gagnant = null; // pat
         }
-
         return true;
     }
 
@@ -263,27 +281,7 @@ public class JeuEchec extends Jeu{
 
     @Override
     protected void afficherPlateauEtTrait() {
-        int rows = plateau.getSizeX();
-        int cols = plateau.getSizeY();
-        StringBuilder sb = new StringBuilder();
-        for (int x = 0; x < rows; x++) {
-            sb.append("| ");
-            for (int y = 0; y < cols; y++) {
-                Piece p = Plateau.getCase(x, y).getPiece();
-                if (p == null) {
-                    sb.append("O ");
-                } else {
-                    char letter = p.getClass().getSimpleName().charAt(0);
-                    boolean isBlanc = p.getCouleur() != null && p.getCouleur().toUpperCase().startsWith("BL");
-                    char colorChar = isBlanc ? 'b' : 'n';
-                    sb.append(letter).append(colorChar);
-                }
-                if (y < cols - 1) sb.append(" ");
-            }
-            sb.append(" |");
-            sb.append(System.lineSeparator());
-        }
-        System.out.print(sb.toString());
+        // Intentionnellement vide : l'affichage est géré par la vue/handler via JeuEventListener.
     }
 
 
@@ -339,7 +337,7 @@ public class JeuEchec extends Jeu{
         }
 
         if (roi == null) {
-            System.out.println("Erreur : Roi non trouvé pour " + joueur.getCouleur());
+            // Roi introuvable pour ce joueur (état invalide), considérer comme non en échec.
             return false;
         }
 
