@@ -8,6 +8,13 @@ import modele.plateau.Plateau;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Stratégie de déplacement du roi (échecs).
+ * <p>
+ * Le roi se déplace d’une case dans toutes les directions et gère ici les
+ * mouvements spéciaux de roque (petit et grand) sous conditions.
+ * </p>
+ */
 public class DecRoi extends DecCasesAccessibles {
 
     public DecRoi(DecCasesAccessibles base) {

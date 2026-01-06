@@ -10,6 +10,12 @@ import modele.plateau.Plateau;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Stratégie de déplacements du pion (échecs).
+ * <p>
+ * Gère l’avance d’une ou deux cases, les prises diagonales et la prise en passant.
+ * </p>
+ */
 public class DecPion extends DecCasesAccessibles {
 
     public DecPion(DecCasesAccessibles base) {

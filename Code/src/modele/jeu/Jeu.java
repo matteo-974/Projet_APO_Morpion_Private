@@ -7,6 +7,13 @@ import java.util.List;
 import java.util.Observable;
 import audio.SoundManager;
 
+/**
+ * Modèle abstrait d’un jeu sur plateau.
+ * <p>
+ * Gère le cycle de jeu (thread, file de coups), l’état des joueurs et expose
+ * des opérations communes aux variantes (affichage, réinitialisation, etc.).
+ * </p>
+ */
 public abstract class Jeu extends Observable implements Runnable {
     static Plateau plateau;
     protected Coup buffCoup;
@@ -95,6 +102,10 @@ public abstract class Jeu extends Observable implements Runnable {
 
     public Joueur getJoueurCourant() {
         return joueurCourant;
+    }
+
+    public boolean[][] getWinningCells() {
+        return winningCells;
     }
 
     public abstract void reinitialiserPartie();

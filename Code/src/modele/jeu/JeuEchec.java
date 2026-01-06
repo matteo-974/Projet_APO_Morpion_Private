@@ -16,6 +16,13 @@ import audio.SoundManager;
 
 import static modele.plateau.Plateau.getCase;
 
+/**
+ * Implémentation du jeu d’Échecs.
+ * <p>
+ * Gère les règles spécifiques (déplacements, échec/échec et mat, roques,
+ * promotion des pions) et l’orchestration des tours.
+ * </p>
+ */
 public class JeuEchec extends Jeu{
 
     public JeuEchec(Plateau plateau) {

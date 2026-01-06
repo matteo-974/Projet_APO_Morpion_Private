@@ -10,6 +10,13 @@ import modele.plateau.Plateau;
 import vue.VueConsole;
 import vue.Fenetres.FenetreMenuPrincipal;
 
+/**
+ * Point d'entrée de l’application.
+ * <p>
+ * Propose le choix du mode d’exécution (console ou graphique) puis délègue
+ * l’initialisation aux composants concernés.
+ * </p>
+ */
 public class Main {
 
 

@@ -19,6 +19,15 @@ public class VueConsole implements Runnable {
     public VueConsole(Jeu jeu, Scanner sharedScanner) {
         this.jeu = jeu;
         this.scanner = sharedScanner; // Utilise le Scanner déjà ouvert par Main
+        
+        // --- AJOUT MVC ---
+        // Si c'est un TicTacToe, on lui attache son gestionnaire d'affichage/son
+        if (jeu instanceof JeuTicTacToe) {
+            TicTacToeConsoleHandler handler = new TicTacToeConsoleHandler(jeu);
+            ((JeuTicTacToe) jeu).setEventListener(handler);
+        }
+        // -----------------
+        
         new Thread(this).start();
         
         System.out.println("Vue Console démarrée pour le jeu : " + jeu.getClass().getSimpleName());

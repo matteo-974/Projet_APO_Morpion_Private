@@ -1,11 +1,16 @@
 package modele.jeu;
 
-import audio.SoundManager;
 import modele.jeu.Pieces.PionTicTacToe;
 import modele.plateau.Case;
 import modele.plateau.Plateau;
 
 public class JeuTicTacToe extends Jeu {
+
+    private JeuEventListener listener;
+
+    public void setEventListener(JeuEventListener listener) {
+        this.listener = listener;
+    }
 
     public JeuTicTacToe(Plateau plateau) {
         super(plateau);
@@ -14,38 +19,38 @@ public class JeuTicTacToe extends Jeu {
 
     @Override
     public boolean jouerPartie(Coup premierCoup) {
-        Coup coup = premierCoup;
-        while (!estTermine()) {
-            Case caseArrivee = coup.getArrivee();
+        if (premierCoup == null) return false;
+        Case caseArrivee = premierCoup.getArrivee();
 
-            // Au TicTacToe, on doit placer une pièce sur une case vide
-            if (caseArrivee.getPiece() != null) {
-                System.out.println("Cette case est déjà occupée !");
-                SoundManager.playSound("Sounds/illegal.wav");
-                setChanged();
-                notifyObservers();
-                coup = getCoup();
-                continue;
-            }
-
-            // Créer une nouvelle pièce et la placer
-            new PionTicTacToe(joueurCourant.getCouleur().name(), plateau, caseArrivee);
-
-            System.out.println("Coup joué: " + joueurCourant.getCouleur().name() + 
-                    " à la position (" + caseArrivee.getPosX() + ", " +
-                    caseArrivee.getPosY() + ")");
-            SoundManager.playSound("Sounds/move-self.wav");
-
-            joueurCourant = (joueurCourant == JOUEUR_BLANC) ? JOUEUR_NOIR : JOUEUR_BLANC;
+        // Au TicTacToe, on doit placer une pièce sur une case vide
+        if (caseArrivee == null || caseArrivee.getPiece() != null) {
+            if (listener != null) listener.onCoupInvalide("Cette case est déjà occupée !");
             setChanged();
             notifyObservers();
-
-            // Afficher le plateau mis à jour et indiquer le trait au joueur suivant
-            afficherPlateauEtTrait();
-
-            coup = getCoup();
+            return false;
         }
-        return false;
+
+        // Créer une nouvelle pièce et la placer
+        new PionTicTacToe(joueurCourant.getCouleur().name(), plateau, caseArrivee);
+
+        if (listener != null) listener.onCoupJoue(joueurCourant, caseArrivee);
+
+        // Vérifier fin de partie
+        boolean fin = estTermine();
+        if (fin) {
+            if (gagnant != null) {
+                if (listener != null) listener.onPartieTerminee(gagnant);
+            } else {
+                if (listener != null) listener.onMatchNul();
+            }
+        } else {
+            // Changer de joueur uniquement si la partie continue
+            joueurCourant = (joueurCourant == JOUEUR_BLANC) ? JOUEUR_NOIR : JOUEUR_BLANC;
+        }
+
+        setChanged();
+        notifyObservers();
+        return true;
     }
 
 
@@ -69,10 +74,6 @@ public class JeuTicTacToe extends Jeu {
                 winningCells[x][0] = true;
                 winningCells[x][1] = true;
                 winningCells[x][2] = true;
-                // Afficher la position finale
-                afficherPlateauEtTrait();
-                System.out.println("Le joueur " + p1.getCouleur() + " a gagné !");
-                SoundManager.playSound("Sounds/game-end.wav");
                 return true;
             }
         }
@@ -91,10 +92,6 @@ public class JeuTicTacToe extends Jeu {
                 winningCells[0][y] = true;
                 winningCells[1][y] = true;
                 winningCells[2][y] = true;
-                // Afficher la position finale
-                afficherPlateauEtTrait();
-                System.out.println("Le joueur " + p1.getCouleur() + " a gagné !");
-                SoundManager.playSound("Sounds/game-end.wav");
                 return true;
             }
         }
@@ -111,10 +108,6 @@ public class JeuTicTacToe extends Jeu {
             winningCells[0][0] = true;
             winningCells[1][1] = true;
             winningCells[2][2] = true;
-            // Afficher la position finale
-            afficherPlateauEtTrait();
-            System.out.println("Le joueur " + p1.getCouleur() + " a gagné !");
-            SoundManager.playSound("Sounds/game-end.wav");
             return true;
         }
 
@@ -130,10 +123,6 @@ public class JeuTicTacToe extends Jeu {
             winningCells[0][2] = true;
             winningCells[1][1] = true;
             winningCells[2][0] = true;
-            // Afficher la position finale
-            afficherPlateauEtTrait();
-            System.out.println("Le joueur " + p1.getCouleur() + " a gagné !");
-            SoundManager.playSound("Sounds/game-end.wav");
             return true;
         }
 
@@ -152,10 +141,6 @@ public class JeuTicTacToe extends Jeu {
         if (plateauPlein) {
             gagnant = null; // Match nul
             clearWinningCells();
-            // Afficher la position finale
-            afficherPlateauEtTrait();
-            System.out.println("Pat ! Match nul.");
-            SoundManager.playSound("Sounds/game-end.wav");
             return true;
         }
 
@@ -168,32 +153,7 @@ public class JeuTicTacToe extends Jeu {
 
     @Override
     protected void afficherPlateauEtTrait() {
-        int rows = plateau.getSizeX();
-        int cols = plateau.getSizeY();
-        StringBuilder sb = new StringBuilder();
-        int n = 1;
-        for (int x = 0; x < rows; x++) {
-            sb.append("| ");
-            for (int y = 0; y < cols; y++) {
-                Piece p = Plateau.getCase(x, y).getPiece();
-                if (p == null) {
-                    sb.append(n);
-                } else {
-                    boolean isBlanc = p.getCouleur() != null && p.getCouleur().toUpperCase().startsWith("BL");
-                    String symbol = isBlanc ? "X" : "O";
-                    if (winningCells != null && winningCells.length == rows && winningCells[x][y]) {
-                        sb.append("(").append(symbol).append(")");
-                    } else {
-                        sb.append(symbol);
-                    }
-                }
-                if (y < cols - 1) sb.append(" ");
-                n++;
-            }
-            sb.append(" |");
-            sb.append(System.lineSeparator());
-        }
-        System.out.print(sb.toString());
+        // Intentionnellement vide: la vue/handler s'occupe de l'affichage.
     }
 
 

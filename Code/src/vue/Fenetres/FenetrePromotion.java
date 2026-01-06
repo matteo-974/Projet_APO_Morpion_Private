@@ -11,11 +11,23 @@ import modele.plateau.Plateau;
 import javax.swing.*;
 import java.awt.*;
 
+/**
+ * Boîte de dialogue de promotion d'un pion aux échecs.
+ * <p>
+ * Affiche quatre choix (Dame, Tour, Cavalier, Fou) et crée la pièce sélectionnée
+ * sur la case de destination donnée.
+ * </p>
+ */
 public class FenetrePromotion extends JDialog {
     private final String couleur;
     private final Case caseDestination;
     private Piece piecePromo = null;
 
+    /**
+     * Crée la boîte de dialogue de promotion pour la couleur donnée.
+     * @param couleur couleur du joueur promouvant le pion
+     * @param caseDestination case où placer la pièce promue
+     */
     public FenetrePromotion(String couleur, Case caseDestination) {
         this.couleur = couleur;
         this.caseDestination = caseDestination;
@@ -42,6 +54,11 @@ public class FenetrePromotion extends JDialog {
         setVisible(true);
     }
 
+    /**
+     * Crée un bouton graphique pour un type de pièce de promotion.
+     * @param type "Dame", "Tour", "Cavalier" ou "Fou"
+     * @return le bouton prêt à l'emploi
+     */
     private JButton createButton(String type) {
         String suffixe = switch (type) {
             case "Dame" -> "Q";

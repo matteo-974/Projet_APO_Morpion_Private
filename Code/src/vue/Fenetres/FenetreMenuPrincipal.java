@@ -59,6 +59,10 @@ public class FenetreMenuPrincipal extends JFrame {
         this.add(mainPanel);
     }
 
+    /**
+     * Ouvre la fenêtre de sélection des jeux et ferme le menu principal actuel.
+     * @return toujours null (compatibilité avec l'usage existant)
+     */
     private Object afficherMenuJeu() {
         this.dispose();
         SwingUtilities.invokeLater(() -> {
@@ -69,6 +73,10 @@ public class FenetreMenuPrincipal extends JFrame {
         return null;
     }
 
+    /**
+     * Affiche une boîte de dialogue de paramètres audio permettant de régler
+     * le volume général et l'état muet, et de tester la sortie sonore.
+     */
     private void ouvrirParametres() {
         JDialog dialog = new JDialog(this, "Paramètres", true);
         JPanel panel = new JPanel();
@@ -123,6 +131,9 @@ public class FenetreMenuPrincipal extends JFrame {
     }
 
 
+    /**
+     * Ferme proprement la fenêtre du menu principal.
+     */
     private void quitterProgramme() {
         this.dispose();
     }

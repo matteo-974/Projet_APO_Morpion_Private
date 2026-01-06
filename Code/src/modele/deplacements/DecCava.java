@@ -6,6 +6,13 @@ import modele.plateau.Plateau;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Stratégie de déplacement en L (type cavalier aux échecs).
+ * <p>
+ * Génère les cases accessibles à un cavalier depuis une case donnée sans traverser
+ * d’autres pièces.
+ * </p>
+ */
 public class DecCava extends DecCasesAccessibles {
 
     public DecCava(DecCasesAccessibles base) {

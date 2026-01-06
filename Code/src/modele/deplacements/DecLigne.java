@@ -6,6 +6,13 @@ import modele.plateau.Plateau;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Stratégie de déplacement en ligne (type tour aux échecs).
+ * <p>
+ * Parcourt les quatre directions orthogonales jusqu’à rencontrer une pièce ou la
+ * limite du plateau.
+ * </p>
+ */
 public class DecLigne extends DecCasesAccessibles {
 
     public DecLigne(DecCasesAccessibles base) {

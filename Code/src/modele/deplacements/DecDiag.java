@@ -6,12 +6,28 @@ import modele.plateau.Plateau;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Stratégie de déplacement en diagonale (type fou aux échecs).
+ * <p>
+ * Calcule les cases accessibles en diagonales à partir d'une case donnée, en s'arrêtant
+ * sur la première pièce rencontrée (capture possible si ennemie, arrêt si alliée).
+ * </p>
+ */
 public class DecDiag extends DecCasesAccessibles {
 
+    /**
+     * Crée un décorateur de déplacement diagonal.
+     * @param base décorateur de base à chaîner (peut être null)
+     */
     public DecDiag(DecCasesAccessibles base) {
         super(base);
     }
 
+    /**
+     * Retourne les cases accessibles en diagonale à partir de la case c.
+     * @param c case de départ
+     * @return liste des cases accessibles en diagonale
+     */
     @Override
     public List<Case> getMesCA(Case c) {
         List<Case> casesAccessibles = new ArrayList<>();

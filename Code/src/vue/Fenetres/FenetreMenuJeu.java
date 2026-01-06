@@ -13,6 +13,13 @@ import javax.swing.*;
 
 import java.awt.*;
 
+/**
+ * Fenêtre de sélection du jeu.
+ * <p>
+ * Permet de démarrer une partie de TicTacToe, Puissance 4, TicTacToe 3D (placeholder)
+ * ou Échecs via des boutons illustrés.
+ * </p>
+ */
 public class FenetreMenuJeu extends JFrame {
     private JButton btnTicTacToe;
     private JButton btnPuissance4;
@@ -20,6 +27,9 @@ public class FenetreMenuJeu extends JFrame {
     private JButton btnEchec;
     
 
+    /**
+     * Construit la fenêtre listant les jeux disponibles et initialise l'interface.
+     */
     public FenetreMenuJeu() {
         // Configuration de la fenêtre
         this.setTitle("Choix du jeu");
@@ -86,6 +96,9 @@ public class FenetreMenuJeu extends JFrame {
     }
 
 
+    /**
+     * Lance une partie de TicTacToe en fermant le menu et en créant la vue.
+     */
     private void demarrerTicTacToe() {
         this.dispose(); // Ferme le menu
         // Démarrage du jeu
@@ -94,6 +107,9 @@ public class FenetreMenuJeu extends JFrame {
         new VueTicTacToe(jeu);
     }
 
+    /**
+     * Lance une partie de Puissance 4 en fermant le menu et en créant la vue.
+     */
     private void demarrerPuissance4() {
         this.dispose(); // Ferme le menu
         Plateau plateau = new Plateau(6, 7);
@@ -101,6 +117,10 @@ public class FenetreMenuJeu extends JFrame {
         new VuePuissance4(jeu);
     }
 
+    /**
+     * Place-holder pour TicTacToe 3D (non implémenté).
+     * Ferme simplement le menu pour l'instant.
+     */
     private void demarrerTicTacToe3D() {
         this.dispose(); // Ferme le menu
 
