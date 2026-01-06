@@ -142,15 +142,15 @@ public class VueConsole implements Runnable {
 
         // Définir l'instruction de saisie adaptée au jeu
         if (jeu instanceof JeuTicTacToe) {
-            instruction = "Entrez le numéro de la case où jouer (1-9) ou 'q' pour quitter : ";
+            instruction = "Entrez le numéro de la case où jouer (1-9) ou 'q' pour quitter :\n";
         } else if (jeu instanceof JeuTicTacToe3D) {
-            instruction = "Entrez la case où jouer (a1-c9) ou 'q' pour quitter : ";
+            instruction = "Entrez la case où jouer (a1-c9) ou 'q' pour quitter :\n";
         } else if (jeu instanceof JeuPuissance4) {
-            instruction = "Entrez le numéro de la colonne où jouer ou 'q' pour quitter : ";
+            instruction = "Entrez le numéro de la colonne où jouer ou 'q' pour quitter :\n";
         } else if (jeu instanceof JeuEchec) {
-            instruction = "Entrez votre coup (ex: a2a4) ou 'q' pour quitter : ";
+            instruction = "Entrez votre coup (ex: a2a4) ou 'q' pour quitter :\n";
         } else {
-            instruction = "Entrez votre coup ou 'q' pour quitter : ";
+            instruction = "Entrez votre coup ou 'q' pour quitter : \n";
         }
 
         while (true) {
