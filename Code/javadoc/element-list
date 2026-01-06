@@ -1,0 +1,10 @@
+audio
+controleur
+lanceur
+modele.deplacements
+modele.jeu
+modele.jeu.Pieces
+modele.jeu.Pieces.PiecesEchec
+modele.plateau
+vue
+vue.Fenetres
