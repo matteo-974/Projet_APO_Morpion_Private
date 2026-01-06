@@ -65,9 +65,7 @@ public class Main {
 
     public static void main(String[] args) {
         
-        // Un Scanner temporaire pour le choix initial du mode.
-        // On suppose ici que la classe 'Input' de votre projet n'est pas encore initialisée
-        // ou qu'elle est spécifique au mode Console.
+        // Un Scanner temporaire pour le choix initial du mode..
         Scanner scanner = new Scanner(System.in);
 
         try{
