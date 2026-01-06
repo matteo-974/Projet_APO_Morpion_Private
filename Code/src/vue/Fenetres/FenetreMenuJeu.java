@@ -4,10 +4,12 @@ import modele.jeu.Jeu;
 import modele.jeu.JeuEchec;
 import modele.jeu.JeuPuissance4;
 import modele.jeu.JeuTicTacToe;
+import modele.jeu.JeuTicTacToe3D;
 import modele.plateau.Plateau;
 import vue.VueEchec;
 import vue.VuePuissance4;
 import vue.VueTicTacToe;
+import vue.VueTicTacToe3D;
 
 import javax.swing.*;
 
@@ -118,12 +120,13 @@ public class FenetreMenuJeu extends JFrame {
     }
 
     /**
-     * Place-holder pour TicTacToe 3D (non implémenté).
-     * Ferme simplement le menu pour l'instant.
+     * Lance une partie de TicTacToe 3D en fermant le menu et en créant la vue.
      */
     private void demarrerTicTacToe3D() {
         this.dispose(); // Ferme le menu
-
+        Plateau plateau = new Plateau(3, 3, 3);
+        JeuTicTacToe3D jeu = new JeuTicTacToe3D(plateau);
+        new VueTicTacToe3D(jeu);
     }
 
     private void demarrerEchec() {
