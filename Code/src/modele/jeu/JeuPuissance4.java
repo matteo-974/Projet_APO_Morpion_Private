@@ -4,18 +4,58 @@ import modele.jeu.Pieces.PionPuissance4;
 import modele.plateau.Case;
 import modele.plateau.Plateau;
 
+/**
+ * Implémentation du jeu Puissance 4.
+ * <p>
+ * Cette classe gère la logique métier spécifique au Puissance 4 :
+ * <ul>
+ * <li>La mécanique de <b>gravité</b> : les pions sont insérés dans une colonne et tombent à la position la plus basse disponible.</li>
+ * <li>Les conditions de <b>victoire</b> : alignement de 4 pions de même couleur (horizontal, vertical ou diagonal).</li>
+ * </ul>
+ * Elle étend la classe abstraite {@link Jeu} et utilise un {@link JeuEventListener} pour communiquer avec l'interface.
+ * </p>
+ */
 public class JeuPuissance4 extends Jeu {
 
     private JeuEventListener listener;
 
+    /**
+     * Définit l'écouteur d'événements pour ce jeu.
+     * <p>
+     * Cet écouteur permet de notifier la vue ou le contrôleur lors d'actions clés
+     * (coup joué, coup invalide, fin de partie).
+     * </p>
+     *
+     * @param listener l'implémentation de l'interface {@link JeuEventListener}.
+     */
     public void setEventListener(JeuEventListener listener) {
         this.listener = listener;
     }
 
+    /**
+     * Construit une nouvelle instance de jeu Puissance 4.
+     *
+     * @param plateau le plateau de jeu sur lequel la partie se déroule (standard 6 lignes x 7 colonnes).
+     */
     public JeuPuissance4(Plateau plateau) {
         super(plateau);
     }
 
+    /**
+     * Tente de jouer un coup pour le joueur courant en respectant la gravité.
+     * <p>
+     * Cette méthode :
+     * <ol>
+     * <li>Identifie la colonne ciblée par le {@code premierCoup}.</li>
+     * <li>Cherche la première case vide dans cette colonne en partant du bas (gravité).</li>
+     * <li>Si la colonne est pleine, notifie un coup invalide et retourne false.</li>
+     * <li>Sinon, place un {@link PionPuissance4}, vérifie la fin de partie et passe le tour.</li>
+     * </ol>
+     * </p>
+     *
+     * @param premierCoup l'objet Coup contenant les informations sur la case ciblée (principalement la colonne).
+     * @return {@code true} si le coup a été joué avec succès, {@code false} sinon (coup null, colonne pleine).
+     */
     @Override
     public boolean jouerPartie(Coup premierCoup) {
         if (premierCoup == null) return false;
@@ -60,6 +100,22 @@ public class JeuPuissance4 extends Jeu {
         return true;
     }
 
+    /**
+     * Vérifie si la partie est terminée (victoire ou match nul).
+     * <p>
+     * La méthode parcourt le plateau pour détecter un alignement de 4 pions consécutifs de la même couleur :
+     * <ul>
+     * <li>Horizontalement</li>
+     * <li>Verticalement</li>
+     * <li>Diagonalement (descendante et montante)</li>
+     * </ul>
+     * Si une victoire est détectée, le champ {@code gagnant} est mis à jour et les cases gagnantes
+     * sont marquées dans le tableau {@code winningCells}.
+     * Si le plateau est plein sans vainqueur, la partie est déclarée nulle.
+     * </p>
+     *
+     * @return {@code true} si la partie est terminée, {@code false} sinon.
+     */
     @Override
     public boolean estTermine() {
         // Vérifier alignement de 4
@@ -167,11 +223,31 @@ public class JeuPuissance4 extends Jeu {
         return false;
     }
 
+    /**
+     * Méthode d'affichage (non utilisée directement dans le modèle).
+     * <p>
+     * L'affichage est délégué aux gestionnaires de vue via le pattern Observer/Listener.
+     * Cette méthode est laissée vide intentionnellement.
+     * </p>
+     */
     @Override
     protected void afficherPlateauEtTrait() {
         // Intentionnellement vide: l'affichage est géré par la vue/handler.
     }
 
+    /**
+     * Réinitialise la partie pour commencer une nouvelle manche.
+     * <p>
+     * Cette méthode :
+     * <ul>
+     * <li>Vide toutes les cases du plateau.</li>
+     * <li>Efface le tableau des cellules gagnantes.</li>
+     * <li>Réinitialise le gagnant à null.</li>
+     * <li>Redonne la main au joueur BLANC.</li>
+     * <li>Notifie les observateurs du changement d'état.</li>
+     * </ul>
+     * </p>
+     */
     @Override
     public void reinitialiserPartie() {
         for (int x = 0; x < plateau.getSizeX(); x++) {
