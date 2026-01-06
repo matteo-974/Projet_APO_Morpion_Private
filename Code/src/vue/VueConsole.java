@@ -43,7 +43,7 @@ public class VueConsole implements Runnable {
      * </p>
      *
      * @param jeu L'instance du jeu (Modèle) en cours.
-     * @param sharedScanner Le scanner ouvert dans le Main (pour éviter de fermer System.in).
+     * @param sharedScanner Le scanner ouvert dans le lanceur.Main (pour éviter de fermer System.in).
      */
     public VueConsole(Jeu jeu, Scanner sharedScanner) {
         this.jeu = jeu;
