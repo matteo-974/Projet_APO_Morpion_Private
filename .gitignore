@@ -1,0 +1,8 @@
+# Fichiers compilés
+out/
+bin/
+*.class
+
+# Fichiers de configuration IDE (optionnel mais recommandé)
+.idea/
+*.iml
