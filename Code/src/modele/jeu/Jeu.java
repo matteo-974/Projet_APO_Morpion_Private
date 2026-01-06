@@ -27,8 +27,9 @@ public abstract class Jeu extends Observable implements Runnable {
     protected Joueur gagnant = null; // null = nul, sinon référence au joueur gagnant
 
     // Tableau marquant les cellules gagnantes (true = faire apparaître entre parenthèses)
-    // Dimensions : [sizeX][sizeY]
+    // Dimensions : [sizeX][sizeY] pour 2D ou [sizeX][sizeY][sizeZ] pour 3D
     protected boolean[][] winningCells = null;
+    protected boolean[][][] winningCells3D = null;
 
 
 
@@ -108,6 +109,10 @@ public abstract class Jeu extends Observable implements Runnable {
         return winningCells;
     }
 
+    public boolean[][][] getWinningCells3D() {
+        return winningCells3D;
+    }
+
     public abstract void reinitialiserPartie();
 
 
@@ -117,7 +122,12 @@ public abstract class Jeu extends Observable implements Runnable {
     public void clearWinningCells() {
         int sx = plateau.getSizeX();
         int sy = plateau.getSizeY();
-        winningCells = new boolean[sx][sy];
+        if (plateau.is3D()) {
+            int sz = plateau.getSizeZ();
+            winningCells3D = new boolean[sx][sy][sz];
+        } else {
+            winningCells = new boolean[sx][sy];
+        }
     }
 
 

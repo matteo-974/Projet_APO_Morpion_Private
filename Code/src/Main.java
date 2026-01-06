@@ -6,8 +6,10 @@ import modele.jeu.Jeu;
 import modele.jeu.JeuEchec;
 import modele.jeu.JeuPuissance4;
 import modele.jeu.JeuTicTacToe;
+import modele.jeu.JeuTicTacToe3D;
 import modele.plateau.Plateau;
 import vue.VueConsole;
+import vue.VueTicTacToe3DConsole;
 import vue.Fenetres.FenetreMenuPrincipal;
 
 /**
@@ -46,8 +48,9 @@ public class Main {
                 Plateau plateauPuissance4 = new Plateau(6, 7);
                 return new JeuPuissance4(plateauPuissance4);
             case "3":
-                Plateau TicTacToe3D = new Plateau(3,3);
-                return new JeuTicTacToe(TicTacToe3D);
+                // TicTacToe 3D avec 3 grilles 3x3 (3 couches)
+                Plateau plateauTicTacToe3D = new Plateau(3, 3, 3);
+                return new JeuTicTacToe3D(plateauTicTacToe3D);
             case "4":
                 Plateau plateauEchec = new Plateau(8, 8);
                 return new JeuEchec(plateauEchec);
@@ -84,7 +87,13 @@ public class Main {
                     
                     if (jeuConsole != null) {
                         System.out.println("Lancement de la vue Console...");
-                        new VueConsole(jeuConsole, scanner); 
+                        
+                        // Gestion spéciale pour TicTacToe3D
+                        if (jeuConsole instanceof JeuTicTacToe3D) {
+                            new VueTicTacToe3DConsole((JeuTicTacToe3D) jeuConsole, scanner);
+                        } else {
+                            new VueConsole(jeuConsole, scanner);
+                        }
                     } else {
                         System.out.println("Le programme s'arrête en raison d'un choix de jeu invalide.");
                     }
