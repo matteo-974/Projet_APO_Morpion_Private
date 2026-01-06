@@ -25,6 +25,9 @@ public class VueConsole implements Runnable {
         if (jeu instanceof JeuTicTacToe) {
             TicTacToeConsoleHandler handler = new TicTacToeConsoleHandler(jeu);
             ((JeuTicTacToe) jeu).setEventListener(handler);
+        } else if (jeu instanceof JeuPuissance4) {
+            Puissance4ConsoleHandler handler = new Puissance4ConsoleHandler(jeu);
+            ((JeuPuissance4) jeu).setEventListener(handler);
         }
         // -----------------
         
