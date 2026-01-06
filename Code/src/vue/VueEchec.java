@@ -8,7 +8,6 @@ import java.util.Observable;
 import java.util.Observer;
 import javax.swing.*;
 
-
 import modele.jeu.*;
 import modele.jeu.Pieces.PiecesEchec.Cavalier;
 import modele.jeu.Pieces.PiecesEchec.Fou;
@@ -20,26 +19,63 @@ import modele.plateau.Case;
 import modele.plateau.Plateau;
 import vue.Fenetres.FenetreMenuPrincipal;
 
-public class VueEchec extends JFrame implements Observer{
+/**
+ * Interface graphique pour le jeu d'Échecs.
+ * <p>
+ * Cette classe hérite de {@link JFrame} pour créer la fenêtre de jeu et implémente {@link Observer}
+ * pour se mettre à jour automatiquement lorsque l'état du modèle {@link Jeu} change.
+ * </p>
+ * <p>
+ * Ses principales responsabilités sont :
+ * <ul>
+ * <li>Afficher le plateau de jeu et les pièces d'échecs sous forme d'icônes.</li>
+ * <li>Gérer les interactions utilisateur (clics souris) pour sélectionner et déplacer les pièces.</li>
+ * <li>Afficher les déplacements possibles (indicateurs visuels).</li>
+ * <li>Indiquer visuellement l'état d'échec (roi en rouge).</li>
+ * <li>Gérer la fin de partie (affichage du vainqueur, score, menu de redémarrage).</li>
+ * </ul>
+ * </p>
+ */
+public class VueEchec extends JFrame implements Observer {
 
-    private Plateau plateau; // référence sur une classe de modèle : permet d'accéder aux données du modèle pour le rafraichissement, permet de communiquer les actions clavier (ou souris)
+    /** Référence au plateau de jeu (modèle) pour accéder aux données des cases. */
+    private Plateau plateau;
+    /** Référence générique au contrôleur/modèle du jeu. */
     private Jeu jeu;
+    /** Référence spécifique au modèle du jeu d'échecs. */
     private JeuEchec jeuEchec;
-    private final int sizeX; // taille de la grille affichée
+
+    /** Nombre de lignes de la grille affichée. */
+    private final int sizeX;
+    /** Nombre de colonnes de la grille affichée. */
     private final int sizeY;
-    private static final int pxCase = 100; // nombre de pixel par case (dépend du type de jeu)
-    // icones affichées dans la grille
+
+    /** Taille en pixels du côté d'une case carrée. */
+    private static final int pxCase = 100;
+
+    // Icônes des pièces (Blanc / Noir)
     private ImageIcon icoRoiB, icoRoiN, icoReineB, icoReineN, icoTourB, icoTourN, icoFouB, icoFouN, icoCavalierB, icoCavalierN, icoPionB, icoPionN;
 
-    private Case caseClic1; // mémorisation des cases cliquées
+    /** Mémorisation de la première case cliquée (départ du coup). */
+    private Case caseClic1;
+    /** Mémorisation de la deuxième case cliquée (arrivée du coup). */
     private Case caseClic2;
 
+    /** Tableau de composants graphiques représentant les cases de la grille. */
+    private JLabel[][] tabJLabel;
 
-
-    private JLabel[][] tabJLabel; // cases graphique (au moment du rafraichissement, chaque case va être associée à une icône, suivant ce qui est présent dans le modèle)
-
+    /** Liste des cases accessibles pour la pièce sélectionnée (pour l'affichage des aides). */
     private java.util.List<Case> casesAccessibles = new java.util.ArrayList<>();
 
+    /**
+     * Construit l'interface graphique du jeu d'échecs.
+     * <p>
+     * Initialise le plateau, charge les ressources graphiques (icônes), met en place les composants
+     * et s'abonne aux notifications du modèle.
+     * </p>
+     *
+     * @param _jeu L'instance du jeu (modèle) à observer et contrôler.
+     */
     public VueEchec(Jeu _jeu) {
         this.jeu = _jeu;
         this.jeuEchec = (JeuEchec) _jeu;
@@ -62,7 +98,12 @@ public class VueEchec extends JFrame implements Observer{
         jeu.addObserver(this);
     }
 
-
+    /**
+     * Charge les images des pièces d'échecs depuis les fichiers ressources.
+     * <p>
+     * Utilise {@link #chargerIcone(String)} pour chaque type de pièce.
+     * </p>
+     */
     private void chargerLesIcones() {
         icoRoiB = chargerIcone("Images/wK.png");
         icoRoiN = chargerIcone("Images/bK.png");
@@ -78,6 +119,12 @@ public class VueEchec extends JFrame implements Observer{
         icoPionN = chargerIcone("Images/bP.png");
     }
 
+    /**
+     * Charge une image depuis un chemin donné et la redimensionne à la taille des cases.
+     *
+     * @param urlIcone Le chemin relatif vers le fichier image.
+     * @return L'objet {@link ImageIcon} redimensionné.
+     */
     private ImageIcon chargerIcone(String urlIcone) {
         ImageIcon icon = new ImageIcon(urlIcone);
 
@@ -88,7 +135,13 @@ public class VueEchec extends JFrame implements Observer{
         return resizedIcon;
     }
 
-
+    /**
+     * Initialise et place les composants graphiques (JLabels) représentant les cases du plateau.
+     * <p>
+     * Configure le layout en grille, initialise chaque case avec sa couleur de fond (damier),
+     * et ajoute les écouteurs de souris pour gérer la sélection et le déplacement des pièces.
+     * </p>
+     */
     private void placerLesComposantsGraphiques() {
         setLayout(new GridLayout(sizeX, sizeY)); // Utiliser un GridLayout pour une grille
         for (int x = 0; x < sizeX; x++) {
@@ -99,8 +152,7 @@ public class VueEchec extends JFrame implements Observer{
                 JLabel label = new JLabel();
                 label.setPreferredSize(new Dimension(pxCase, pxCase));
                 label.setOpaque(true);
-                
-                
+
                 // Pour Échecs, alterner les couleurs
                 label.setBackground(Color.LIGHT_GRAY);
                 label.setHorizontalAlignment(SwingConstants.CENTER); // Centrer le contenu
@@ -111,7 +163,7 @@ public class VueEchec extends JFrame implements Observer{
                     @Override
                     public void mouseClicked(MouseEvent e) {
                         if (jeu.estTermine()) return;
-                        
+
                         Case caseClic = Plateau.getCase(xx, yy);
                         if (caseClic1 == null) {
                             if (caseClic.getPiece() != null) {
@@ -141,7 +193,11 @@ public class VueEchec extends JFrame implements Observer{
         }
     }
 
-
+    /**
+     * Crée une icône représentant un indicateur de déplacement possible (rond gris).
+     *
+     * @return Une ImageIcon contenant un rond gris translucide.
+     */
     private ImageIcon dessinerRondGris() {
         BufferedImage image = new BufferedImage(pxCase, pxCase, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = image.createGraphics();
@@ -155,6 +211,12 @@ public class VueEchec extends JFrame implements Observer{
         return new ImageIcon(image);
     }
 
+    /**
+     * Crée une icône composite pour indiquer une prise possible (rond rouge sur une pièce).
+     *
+     * @param iconePiece L'icône de la pièce à capturer.
+     * @return Une nouvelle ImageIcon combinant la pièce et un indicateur rouge semi-transparent.
+     */
     private ImageIcon dessinerRondRouge(ImageIcon iconePiece) {
         BufferedImage image = new BufferedImage(pxCase, pxCase, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = image.createGraphics();
@@ -174,8 +236,20 @@ public class VueEchec extends JFrame implements Observer{
         return new ImageIcon(image);
     }
 
-
-
+    /**
+     * Rafraîchit l'ensemble de l'affichage du plateau.
+     * <p>
+     * Cette méthode :
+     * <ul>
+     * <li>Réinitialise les couleurs de fond (damier).</li>
+     * <li>Met en évidence la case sélectionnée.</li>
+     * <li>Place les icônes des pièces aux bonnes positions selon le modèle.</li>
+     * <li>Affiche les indicateurs de coups possibles (ronds gris/rouges).</li>
+     * <li>Met en évidence le Roi en rouge s'il est en échec.</li>
+     * <li>Met à jour le titre de la fenêtre pour indiquer le trait.</li>
+     * </ul>
+     * </p>
+     */
     private void mettreAJourAffichageEchecs() {
         for (int x = 0; x < sizeX; x++) {
             for (int y = 0; y < sizeY; y++) {
@@ -191,6 +265,7 @@ public class VueEchec extends JFrame implements Observer{
 
 
                 if (caseModele.getPiece() != null) {
+                    // Sélection de l'icône appropriée selon le type de pièce et sa couleur
                     if (caseModele.getPiece() instanceof Roi) {
                         Roi roi = (Roi) caseModele.getPiece();
                         if ("Blanc".equals(roi.getCouleur())) {
@@ -264,7 +339,7 @@ public class VueEchec extends JFrame implements Observer{
 
         Joueur joueur = jeu.getJoueurCourant();
         if (jeuEchec.estEnEchec(joueur)) {
-            // Trouver le roi
+            // Trouver le roi et le marquer en rouge
             for (int x = 0; x < sizeX; x++) {
                 for (int y = 0; y < sizeY; y++) {
                     Case c = Plateau.getCase(x, y);
@@ -279,8 +354,13 @@ public class VueEchec extends JFrame implements Observer{
         setTitle("Trait au " + joueur.getCouleur().name().toLowerCase());
     }
 
-
-
+    /**
+     * Affiche une boîte de dialogue indiquant la fin de la partie.
+     * <p>
+     * Affiche le gagnant, le type de victoire (Mat ou Pat), et les scores.
+     * Propose à l'utilisateur de rejouer, de retourner au menu principal ou de quitter.
+     * </p>
+     */
     private void afficherFinDePartie() {
         String message;
         Joueur gagnant = null;
@@ -299,7 +379,7 @@ public class VueEchec extends JFrame implements Observer{
         String scoreMessage = message + "\n\n--- SCORE ---\n" +
                 "Blanc: " + jeu.getJoueurBlanc().getPoints() + " points\n" +
                 "Noir: " + jeu.getJoueurNoir().getPoints() + " points";
-        
+
         // Boîte de dialogue avec options
         String[] options = {"Rejouer", "Menu", "Quitter"};
         int choix = JOptionPane.showOptionDialog(
@@ -328,8 +408,15 @@ public class VueEchec extends JFrame implements Observer{
         }
     }
 
-
-
+    /**
+     * Méthode appelée automatiquement lorsqu'un changement survient dans le modèle observé (Jeu).
+     * <p>
+     * Déclenche le rafraîchissement de l'affichage et vérifie si la partie est terminée.
+     * </p>
+     *
+     * @param o   L'objet observable qui a notifié le changement (ici, le Jeu).
+     * @param arg Un argument optionnel passé par notifyObservers (non utilisé ici).
+     */
     @Override
     public void update(Observable o, Object arg) {
         mettreAJourAffichageEchecs();
