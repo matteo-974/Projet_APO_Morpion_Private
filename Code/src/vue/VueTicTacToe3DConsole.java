@@ -2,6 +2,7 @@ package vue;
 
 import modele.jeu.Coup;
 import modele.jeu.JeuTicTacToe3D;
+import modele.jeu.Piece;
 import modele.plateau.Case;
 import modele.plateau.Plateau;
 import java.util.Scanner;
@@ -41,6 +42,13 @@ public class VueTicTacToe3DConsole implements Runnable {
             if (coup == null) {
                 System.out.println("Fin de l'interaction console.");
                 break; 
+            }
+            
+            // Afficher l'aperçu du coup et demander confirmation
+            if (!confirmerCoup(coup)) {
+                // L'utilisateur a annulé, on continue la boucle sans jouer le coup
+                System.out.println("Coup annulé. À vous de rejouer.\n");
+                continue;
             }
             
             jeu.setCoup(coup);
@@ -125,6 +133,111 @@ public class VueTicTacToe3DConsole implements Runnable {
         }
         
         // TicTacToe 3D : Pas de case de départ, juste la case d'arrivée
-        return new Coup(arrivee, arrivee);
+        return new Coup(null, arrivee);
+    }
+
+    /**
+     * Affiche un aperçu du coup avec le symbole entre chevrons (>X<) et demande confirmation.
+     * 
+     * @param coup Le coup à confirmer.
+     * @return true si l'utilisateur confirme (y), false sinon (n).
+     */
+    private boolean confirmerCoup(Coup coup) {
+        // Afficher l'aperçu du coup
+        System.out.println("\n=== APERÇU DE VOTRE COUP ===");
+        afficherApercuTicTacToe3D(coup);
+        
+        // Demander confirmation
+        while (true) {
+            System.out.print("Voulez-vous jouer ce coup ? (y/n) : ");
+            String reponse = scanner.nextLine().trim().toLowerCase();
+            
+            if (reponse.equals("y") || reponse.equals("yes") || reponse.equals("oui") || reponse.equals("o")) {
+                return true;
+            } else if (reponse.equals("n") || reponse.equals("no") || reponse.equals("non")) {
+                return false;
+            } else {
+                System.out.println("Réponse invalide. Veuillez entrer 'y' pour oui ou 'n' pour non.");
+            }
+        }
+    }
+
+    /**
+     * Affiche un aperçu pour le TicTacToe3D avec le symbole entre chevrons.
+     */
+    private void afficherApercuTicTacToe3D(Coup coup) {
+        boolean[][][] winning = jeu.getWinningCells3D();
+        
+        // Déterminer le symbole du joueur courant
+        boolean isBlanc = jeu.getJoueurCourant().getCouleur().name().equalsIgnoreCase("BLANC");
+        String symbol = isBlanc ? "X" : "O";
+        
+        StringBuilder sb = new StringBuilder();
+        sb.append("\n========== TIC-TAC-TOE 3D ==========\n");
+        
+        // Afficher les 3 grilles (couches)
+        char[] layers = {'a', 'b', 'c'};
+        
+        for (int z = 0; z < 3; z++) {
+            sb.append("\nGrille ").append(Character.toUpperCase(layers[z])).append(":\n");
+            sb.append("-------------\n");
+            
+            for (int x = 0; x < 3; x++) {
+                sb.append("| ");
+                for (int y = 0; y < 3; y++) {
+                    Case currentCase = Plateau.getCase(x, y, z);
+                    Piece piece = currentCase.getPiece();
+                    
+                    // Si c'est la case du coup à jouer, afficher avec chevrons
+                    if (coup.getArrivee().equals(currentCase)) {
+                        sb.append(">").append(symbol).append("<");
+                    } else if (piece == null) {
+                        // Afficher la notation (a1-a9, b1-b9, c1-c9)
+                        String notation = getCaseNotation3D(currentCase);
+                        sb.append(notation);
+                        // Padding pour alignement
+                        if (notation.length() == 2) sb.append(" ");
+                    } else {
+                        boolean isPieceBlanc = piece.getCouleur() != null && 
+                                        piece.getCouleur().toUpperCase().startsWith("BL");
+                        String pieceSymbol = isPieceBlanc ? "X" : "O";
+                        
+                        // Vérifier si cette case est gagnante
+                        boolean isWinning = winning != null && winning[x][y][z];
+                        if (isWinning) {
+                            sb.append("(").append(pieceSymbol).append(")");
+                        } else {
+                            sb.append(" ").append(pieceSymbol).append(" ");
+                        }
+                    }
+                    
+                    if (y < 2) sb.append("| ");
+                }
+                sb.append("|\n");
+                
+                if (x < 2) {
+                    sb.append("|----|----|----|").append("\n");
+                } else {
+                    sb.append("----------------\n");
+                }
+            }
+        }
+        
+        sb.append("\n====================================\n");
+        sb.append("Légende: X = Blanc, O = Noir\n");
+        
+        System.out.print(sb.toString());
+    }
+
+    /**
+     * Convertit une case en notation 3D (a1-a9, b1-b9, c1-c9).
+     */
+    private String getCaseNotation3D(Case c) {
+        int z = c.getPosZ();
+        int x = c.getPosX();
+        int y = c.getPosY();
+        char layer = (char) ('a' + z);
+        int number = x * 3 + y + 1;
+        return "" + layer + number;
     }
 }
